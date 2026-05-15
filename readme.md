@@ -51,7 +51,7 @@ minikube start `
 
 ## Project Structure
 
-```
+
 mlflow_v2/
 ├── README.md
 ├── .gitignore
@@ -74,7 +74,7 @@ mlflow_v2/
 └── mlflow-data/                 # Local data storage
     ├── postgres/                # PostgreSQL data
     └── artifacts/               # MLflow artifacts
-```
+
 
 ## Local Deployment
 
