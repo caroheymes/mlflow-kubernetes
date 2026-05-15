@@ -1,0 +1,65 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: raycluster-kuberay
+spec:
+  rayVersion: '2.9.0'
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: '0.0.0.0'
+    template:
+      spec:
+        serviceAccountName: mlflow-ksa # Pour l'accès GCS
+        containers:
+          - name: ray-head
+            image:  gcr.io/ray-distributed-ml/ray-training:latest # <-- vient du docker build
+            imagePullPolicy: Always  # <-- force l'utilisation de la dernière image docker
+            ports:
+              - containerPort: 6379
+                name: gcs
+              - containerPort: 8265
+                name: dashboard
+              - containerPort: 10001
+                name: client
+            resources:
+              limits:
+                cpu: "1"
+                memory: "4Gi"
+              requests:
+                cpu: "1"
+                memory: "4Gi"
+  workerGroupSpecs:
+    - replicas: 1
+      groupName: small-group
+      rayStartParams: {}
+      template:
+        spec:
+          serviceAccountName: mlflow-ksa # Pour l'accès GCS
+          containers:
+            - name: ray-worker
+              image:  gcr.io/ray-distributed-ml/ray-training:latest # <-- vient du docker build
+              resources:
+               #----------si CPU
+                # limits:
+                #   cpu: "500m" # 
+                #   memory: "2Gi"
+                #   
+                # requests:
+                #   cpu: "500m" 
+                #   memory: "2Gi" 
+                #  
+                #------si deep learning
+                limits:
+                  cpu: "4" # "4" si deep learning
+                  memory: "16Gi" # "16Gi"si DL
+                  nvidia.com/gpu: "1" # <-- A ACTIVER SI DEEP LEARNING
+                requests:
+                  cpu: "4"  # "4" si deep learning
+                  memory: "16Gi" # "16Gi"si DL
+                  nvidia.com/gpu: "1" # <-- A ACTIVER SI DEEP LEARNING
+          nodeSelector:
+            cloud.google.com/gke-nodepool: gpu-pool
+          tolerations:
+          - key: "nvidia.com/gpu"
+            operator: "Exists"
+            effect: "NoSchedule"        
